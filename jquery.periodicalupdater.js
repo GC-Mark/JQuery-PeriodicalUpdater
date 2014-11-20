@@ -28,6 +28,7 @@
 					maxTimeout:64000, // maximum length of time between requests
 					multiplier: 2,		// if set to 2, timerInterval will double each time the response hasn't changed (up to maxTimeout)
 					maxCalls: 0,			// maximum number of calls. 0 = no limit.
+          maxCallsCallback: null, // The callback to execute when we reach our max number of calls
 					autoStop: 0,			// automatically stop requests after this many returns of the same data. 0 = disabled
 					autoStopCallback: null, // The callback to execute when we autoStop
 					cookie: false,		// whether (and how) to store a cookie
@@ -96,13 +97,13 @@
 						settings.cookie = {
 							name: settings.cookie.toString()
 						};
-					} 
+					}
 					if(!settings.cookie.name) {
 						settings.cookie.name = url;
 					}
 
 					if(!$.cookie) {
-						$.getScript("https://raw.github.com/carhartl/jquery-cookie/master/jquery.cookie.js", function() {
+						$.getScript("//rawgit.com/carhartl/jquery-cookie/master/jquery.cookie.js", function() {
 							pu_log("Loaded the cookies handler script", 2);
 							if($.cookie(settings.cookie.name)) {
 								pu_log("Not runatonce and have cookie value", 2);
@@ -131,7 +132,7 @@
 
 
 				// Create the function to get data
-				function getdata(force) {
+				var getdata = function(force) {
 						var toSend = jQuery.extend(true, {}, ajaxSettings); // jQuery screws with what you pass in
 						if (typeof (options.data) == 'function') {
 							toSend.data = options.data();
@@ -154,6 +155,7 @@
 							pu_log("NOT sending data: stop has been called", 1);
 						} else {
 							pu_log("NOT sending data: maximum number of calls reached - " + maxCalls, 1);
+              if (settings.maxCallsCallback) { settings.maxCallsCallback(); }
 						}
 				}
 
@@ -244,7 +246,7 @@
 				if (settings.runatonce) {
 					pu_log("Executing a call immediately", 1);
 					getdata(true);
-				} else if($.cookie && $.cookie(settings.cookie.name)) {
+				} else if($.cookie && settings.cookie && $.cookie(settings.cookie.name)) {
 					// Do nothing (already handled above)
 				} else {
 					pu_log("Enqueing a the call for after " + timerInterval, 1);
